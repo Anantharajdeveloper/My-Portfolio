@@ -38,42 +38,75 @@ document.addEventListener('DOMContentLoaded', function () {
     const track = document.getElementById('project-track');
     const prevBtn = document.getElementById('project-prev');
     const nextBtn = document.getElementById('project-next');
-    
+    const dotsContainer = document.getElementById('project-dots');
+
     if (track && prevBtn && nextBtn) {
         const cards = Array.from(track.children);
         let currentIndex = 0;
-        
+
         function getCardsPerPage() {
-            if (window.innerWidth >= 1024) return 3;
-            if (window.innerWidth >= 640) return 2;
+            if (window.innerWidth >= 1024) return 2;
             return 1;
         }
-        
+
+        function buildDots() {
+            if (!dotsContainer) return;
+            const cardsPerPage = getCardsPerPage();
+            const totalDots = Math.ceil(cards.length / cardsPerPage);
+            dotsContainer.innerHTML = '';
+            for (let i = 0; i < totalDots; i++) {
+                const dot = document.createElement('span');
+                dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                dot.addEventListener('click', () => {
+                    currentIndex = i * cardsPerPage;
+                    updateCarousel();
+                });
+                dotsContainer.appendChild(dot);
+            }
+        }
+
+        function updateDots() {
+            if (!dotsContainer) return;
+            const cardsPerPage = getCardsPerPage();
+            const dots = dotsContainer.querySelectorAll('.carousel-dot');
+            const activeDot = Math.floor(currentIndex / cardsPerPage);
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === activeDot);
+            });
+        }
+
         function updateCarousel() {
             const cardsPerPage = getCardsPerPage();
             const maxIndex = Math.max(0, cards.length - cardsPerPage);
-            
+
             if (currentIndex > maxIndex) currentIndex = maxIndex;
             if (currentIndex < 0) currentIndex = 0;
-            
+
             const offset = currentIndex * (100 / cardsPerPage);
             track.style.transform = `translateX(-${offset}%)`;
-            
+
             prevBtn.disabled = currentIndex === 0;
             nextBtn.disabled = currentIndex >= maxIndex;
+            updateDots();
         }
-        
+
         prevBtn.addEventListener('click', () => {
             currentIndex--;
             updateCarousel();
         });
-        
+
         nextBtn.addEventListener('click', () => {
             currentIndex++;
             updateCarousel();
         });
-        
-        window.addEventListener('resize', updateCarousel);
+
+        window.addEventListener('resize', () => {
+            currentIndex = 0;
+            buildDots();
+            updateCarousel();
+        });
+
+        buildDots();
         updateCarousel();
     }
 });
